@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { product } from "../libs/product";
+import Link from "next/link";
 
 const Checkout = () => {
   const [quantity, setQuantity] = useState(1);
+  const [paymentUrl, setPaymentUrl] = useState("");
 
   const decreaseQuantity = () => {
     setQuantity((prevState) => (quantity > 1 ? prevState - 1 : null));
@@ -29,7 +31,35 @@ const Checkout = () => {
   };
 
   const generatePaymentLink = async () => {
-    alert("Checkout Payment Link! 🔥");
+    const secret = process.env.NEXT_PUBLIC_SECRET;
+    const enCodedSecret = Buffer.from(secret).toString("base64");
+    const basicAuthString = `Basic ${enCodedSecret}`;
+
+    let payload = {
+      item_details: [
+        {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: quantity,
+        },
+      ],
+      transaction_details: {
+        order_id: product.id,
+        gross_amount: product.price * quantity,
+      },
+    };
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API}/v1/payment-links`, {
+      method: "POST",
+      headers: {
+        Accept: " application/json",
+        "Content-Type": "application/json",
+        Authorization: basicAuthString,
+      },
+      body: JSON.stringify(payload),
+    });
+    const paymentLink = await response.json();
+    setPaymentUrl(paymentLink.payment_url);
   };
 
   return (
@@ -53,6 +83,13 @@ const Checkout = () => {
       <button className="text-indigo-500 py-4 text-sm font-medium transition hover:scale-105" onClick={generatePaymentLink}>
         Create Payment Link
       </button>
+      {paymentUrl && (
+        <div className="text-sm font-medium text-black">
+          <Link href={paymentUrl} target="_blank">
+            Klik di sini!!
+          </Link>
+        </div>
+      )}
     </>
   );
 };

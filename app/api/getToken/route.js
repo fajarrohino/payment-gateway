@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 let snap = new Midtrans.Snap({
   isProduction: false,
-  serverKey: process.env.SECRET,
+  serverKey: process.env.NEXT_PUBLIC_SECRET,
   clientKey: process.env.NEXT_PUBLIC_CLIENT,
 });
 
